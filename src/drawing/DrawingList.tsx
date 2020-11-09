@@ -4,7 +4,7 @@ import cloneDeep from 'lodash/cloneDeep';
 import noop from 'lodash/noop';
 import DrawingTarget from './DrawingTarget';
 import useOutsideEvent from '../common/useOutsideEvent';
-import { AnnotationDrawing, PathGroup, Shape } from '../@types';
+import { AnnotationDrawing, Dimensions } from '../@types';
 import { checkValue } from '../utils/util';
 import { getShape } from './drawingUtil';
 
@@ -15,29 +15,12 @@ export type Props = {
     onSelect?: (annotationId: string | null) => void;
 };
 
-export const DRAWING_TARGET_PADDING = 10;
-
-export function filterDrawing({ target: { path_groups: pathGroups } }: AnnotationDrawing): boolean {
-    return pathGroups.reduce<boolean>(
-        (prevGroups, { paths }) =>
-            prevGroups &&
-            paths.reduce<boolean>(
-                (prevPaths, { points }) =>
-                    prevPaths &&
-                    points.reduce<boolean>(
-                        (prevPoints, { x, y }) => prevPoints && checkValue(x) && checkValue(y),
-                        true,
-                    ),
-                true,
-            ),
-        true,
+export const filterDrawing = ({ target: { path_groups: pathGroups } }: AnnotationDrawing): boolean =>
+    pathGroups.every(({ paths }) =>
+        paths.every(({ points }) => points.every(({ x, y }) => checkValue(x) && checkValue(y))),
     );
-}
 
-export function scaleDrawing(
-    annotationDrawing: AnnotationDrawing,
-    { height, width }: { height: number; width: number },
-): AnnotationDrawing {
+export function scaleDrawing(annotationDrawing: AnnotationDrawing, { height, width }: Dimensions): AnnotationDrawing {
     const scaledAnnotationDrawing = cloneDeep(annotationDrawing);
     const {
         target: { path_groups: pathGroups },
@@ -57,31 +40,17 @@ export function scaleDrawing(
 }
 
 export function sortDrawing({ target: targetA }: AnnotationDrawing, { target: targetB }: AnnotationDrawing): number {
-    const shapeA = getShape(targetA.path_groups);
-    const shapeB = getShape(targetB.path_groups);
+    const { height: heightA, width: widthA } = getShape(targetA.path_groups);
+    const { height: heightB, width: widthB } = getShape(targetB.path_groups);
 
-    return shapeA.height * shapeA.width > shapeB.height * shapeB.width ? -1 : 1;
-}
-
-export function getShapeWithPadding(
-    pathGroups: PathGroup[],
-    rootDimension: { height: number; width: number },
-    padding = DRAWING_TARGET_PADDING,
-): Shape {
-    const { height, width, x, y } = getShape(pathGroups);
-    const { height: rootHeight, width: rootWidth } = rootDimension;
-
-    return {
-        height: Math.min(rootHeight, height + padding * 2),
-        width: Math.min(rootWidth, width + padding * 2),
-        x: Math.max(0, x - padding),
-        y: Math.max(0, y - padding),
-    };
+    // If B is smaller, the result is negative.
+    // So, A is sorted to an index lower than B, which means A will be rendered first at bottom
+    return heightB * widthB - heightA * widthA;
 }
 
 export function DrawingList({ activeId = null, annotations, className, onSelect = noop }: Props): JSX.Element {
     const [isListening, setIsListening] = React.useState(true);
-    const [rootDimension, setRootDimension] = React.useState<{ height: number; width: number }>();
+    const [rootDimension, setRootDimension] = React.useState<Dimensions>();
     const rootElRef = React.createRef<SVGSVGElement>();
 
     // Document-level event handlers for focus and pointer control
@@ -119,8 +88,7 @@ export function DrawingList({ activeId = null, annotations, className, onSelect 
                             annotationId={id}
                             isActive={activeId === id}
                             onSelect={onSelect}
-                            pathGroups={target.path_groups}
-                            shape={getShapeWithPadding(target.path_groups, rootDimension)}
+                            target={target}
                         />
                     ))}
         </svg>
