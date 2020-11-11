@@ -5,8 +5,10 @@ import './DrawingPath.scss';
 export type Props = {
     borderStrokeWidth?: number;
     isDecorated?: boolean;
-    points: Position[];
+    points?: Position[];
 };
+
+export type DrawingPathRef = SVGPathElement;
 
 // We use cubic Bezier curves to generate path commands for better smoothing.
 // For every data point, we generate extra two points using adjacent data points.
@@ -38,7 +40,10 @@ export const getPathCommands = (points: Position[]): string => {
     return `M ${startX} ${startY} ${d}`;
 };
 
-export const DrawingPath = ({ borderStrokeWidth = 0, isDecorated = false, points }: Props): JSX.Element => {
+export const DrawingPath = (
+    { borderStrokeWidth = 0, isDecorated = false, points = [] }: Props,
+    ref: React.Ref<DrawingPathRef>,
+): JSX.Element => {
     const pathCommands = getPathCommands(points);
     return (
         <g className="ba-DrawingPath">
@@ -53,15 +58,17 @@ export const DrawingPath = ({ borderStrokeWidth = 0, isDecorated = false, points
                     <path
                         className="ba-DrawingPath-border"
                         d={pathCommands}
+                        fill="none"
                         stroke="#fff"
+                        strokeLinecap="round"
                         strokeWidth={borderStrokeWidth}
                         vectorEffect="non-scaling-stroke"
                     />
                 </g>
             )}
-            <path d={pathCommands} vectorEffect="non-scaling-stroke" />
+            <path ref={ref} d={pathCommands} strokeLinecap="round" vectorEffect="non-scaling-stroke" />
         </g>
     );
 };
 
-export default DrawingPath;
+export default React.forwardRef(DrawingPath);
