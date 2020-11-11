@@ -1,4 +1,4 @@
-import { PathGroup, Rect, SerializedError } from '../../@types';
+import { Path, PathGroup, Rect, SerializedError, Stroke } from '../../@types';
 
 export enum CreatorStatus {
     init = 'init',
@@ -7,6 +7,16 @@ export enum CreatorStatus {
     staged = 'staged',
     started = 'started',
 }
+
+export type CreatorPathGroup = PathGroup & {
+    id: string;
+    paths: Array<CreatorPath>;
+    stroke: Stroke;
+};
+
+export type CreatorPath = Path & {
+    id: string;
+};
 
 export type CreatorItemBase = {
     location: number;
@@ -21,7 +31,8 @@ export type CreatorItemHighlight = CreatorItemBase & {
 };
 
 export type CreatorItemDrawing = CreatorItemBase & {
-    path_groups: Array<PathGroup>;
+    drawnPathGroups: Array<CreatorPathGroup>;
+    stashedPathGroups: Array<CreatorPathGroup>;
 };
 
 export type CreatorItem = CreatorItemRegion | CreatorItemHighlight | CreatorItemDrawing | null;
