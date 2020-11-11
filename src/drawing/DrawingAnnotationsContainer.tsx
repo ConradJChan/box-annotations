@@ -11,7 +11,9 @@ import {
     getCreatorStagedForLocation,
     isCreatorStagedDrawing,
     Mode,
+    resetCreatorAction,
     setActiveAnnotationIdAction,
+    setReferenceIdAction,
     setStagedAction,
     setStatusAction,
 } from '../store';
@@ -36,7 +38,9 @@ export const mapStateToProps = (state: AppState, { location }: { location: numbe
 };
 
 export const mapDispatchToProps = {
+    resetCreator: resetCreatorAction,
     setActiveAnnotationId: setActiveAnnotationIdAction,
+    setReferenceId: setReferenceIdAction,
     setStaged: setStagedAction,
     setStatus: setStatusAction,
 };

@@ -21,7 +21,7 @@ type Props = {
 };
 
 const defaultStroke = {
-    color: '#000',
+    color: '#4826c2',
     size: 4,
 };
 

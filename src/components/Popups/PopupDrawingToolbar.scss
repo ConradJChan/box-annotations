@@ -1,0 +1,39 @@
+@import '~box-ui-elements/es/styles/variables';
+
+.ba-PopupDrawingToolbar {
+    width: 224px;
+    height: 32px;
+    padding: 0 16px 0 8px;
+    background-color: $bdl-gray;
+    border-radius: $bdl-border-radius-size;
+
+    .ba-Popup-arrow {
+        display: none;
+    }
+
+    .ba-Popup-content {
+        display: flex;
+        background-color: $bdl-gray;
+        border: none;
+        border-radius: $bdl-border-radius-size;
+        box-shadow: none;
+    }
+}
+
+.ba-PopupDrawingToolbar-comment,
+.ba-PopupDrawingToolbar-delete,
+.ba-PopupDrawingToolbar-redo,
+.ba-PopupDrawingToolbar-undo {
+    @include common-typography;
+
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 5px 10px;
+    color: $white;
+    background: transparent;
+    border: none;
+    border-radius: $bdl-border-radius-size;
+    outline: none;
+    cursor: pointer;
+}
