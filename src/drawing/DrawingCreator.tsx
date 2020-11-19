@@ -1,5 +1,6 @@
 import React from 'react';
 import classNames from 'classnames';
+import noop from 'lodash/noop';
 import * as uuid from 'uuid';
 import useAutoScroll from '../common/useAutoScroll';
 import DrawingPath, { DrawingPathRef, getPathCommand } from './DrawingPath';
@@ -16,6 +17,7 @@ enum DrawingStatus {
 
 type Props = {
     className?: string;
+    onAbort?: () => void;
     onStart: () => void;
     onStop: (pathGroup: CreatorPathGroup) => void;
 };
@@ -25,7 +27,7 @@ const defaultStroke = {
     size: 4,
 };
 
-export default function DrawingCreator({ className, onStart, onStop }: Props): JSX.Element {
+export default function DrawingCreator({ className, onAbort = noop, onStart, onStop }: Props): JSX.Element {
     const [drawingStatus, setDrawingStatus] = React.useState<DrawingStatus>(DrawingStatus.init);
     const capturedPathRef = React.useRef<Array<Position>>([]);
     const creatorElRef = React.useRef<HTMLDivElement>(null);
@@ -37,7 +39,7 @@ export default function DrawingCreator({ className, onStart, onStop }: Props): J
         const { current: creatorEl } = creatorElRef;
         const { current: points } = capturedPathRef;
 
-        if (!creatorEl || points.length === 0) {
+        if (!creatorEl || points.length <= 1) {
             return null;
         }
 
@@ -64,11 +66,10 @@ export default function DrawingCreator({ className, onStart, onStop }: Props): J
     const startDraw = (x: number, y: number): void => {
         const [x1, y1] = getPosition(x, y);
 
+        setDrawingStatus(DrawingStatus.dragging);
+
         capturedPathRef.current = [{ x: x1, y: y1 }];
         drawingDirtyRef.current = true;
-
-        setDrawingStatus(DrawingStatus.drawing);
-        onStart();
     };
     const stopDraw = (): void => {
         const pathGroup = getPathGroup();
@@ -80,6 +81,8 @@ export default function DrawingCreator({ className, onStart, onStop }: Props): J
 
         if (pathGroup) {
             onStop(pathGroup);
+        } else {
+            onAbort();
         }
     };
     const updateDraw = (x: number, y: number): void => {
@@ -88,6 +91,11 @@ export default function DrawingCreator({ className, onStart, onStop }: Props): J
 
         points.push({ x: x2, y: y2 });
         drawingDirtyRef.current = true;
+
+        if (drawingStatus !== DrawingStatus.drawing) {
+            setDrawingStatus(DrawingStatus.drawing);
+            onStart();
+        }
     };
 
     // Event Handlers
