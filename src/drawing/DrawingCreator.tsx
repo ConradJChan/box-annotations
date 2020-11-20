@@ -5,16 +5,10 @@ import * as uuid from 'uuid';
 import useAutoScroll from '../common/useAutoScroll';
 import DrawingPath, { DrawingPathRef, getPathCommands } from './DrawingPath';
 import DrawingSVG, { DrawingSVGRef } from './DrawingSVG';
+import PointerCapture, { Status as DrawingStatus } from '../components/PointerCapture/PointerCapture';
 import { getStrokeWidths } from './DrawingPathGroup';
 import { PathGroup, Position, Stroke } from '../@types';
-import { MOUSE_PRIMARY } from '../constants';
 import './DrawingCreator.scss';
-
-enum DrawingStatus {
-    dragging = 'dragging',
-    drawing = 'drawing',
-    init = 'init',
-}
 
 type Props = {
     className?: string;
@@ -108,42 +102,8 @@ export default function DrawingCreator({
     };
 
     // Event Handlers
-    const handleClick = (event: React.MouseEvent): void => {
-        event.preventDefault();
-        event.stopPropagation();
-        event.nativeEvent.stopImmediatePropagation();
-    };
-    const handleMouseDown = ({ buttons, clientX, clientY }: React.MouseEvent): void => {
-        if (buttons !== MOUSE_PRIMARY) {
-            return;
-        }
-
-        startDraw(clientX, clientY);
-    };
-    const handleMouseMove = ({ buttons, clientX, clientY }: MouseEvent): void => {
-        if (buttons !== MOUSE_PRIMARY || drawingStatus === DrawingStatus.init) {
-            return;
-        }
-
-        updateDraw(clientX, clientY);
-    };
-    const handleMouseUp = (): void => {
-        stopDraw();
-    };
     const handleScroll = (x: number, y: number): void => {
         updateDraw(x, y);
-    };
-    const handleTouchCancel = (): void => {
-        stopDraw();
-    };
-    const handleTouchEnd = (): void => {
-        stopDraw();
-    };
-    const handleTouchMove = ({ targetTouches }: React.TouchEvent): void => {
-        updateDraw(targetTouches[0].clientX, targetTouches[0].clientY);
-    };
-    const handleTouchStart = ({ targetTouches }: React.TouchEvent): void => {
-        startDraw(targetTouches[0].clientX, targetTouches[0].clientY);
     };
 
     const renderStep = (callback: () => void): void => {
@@ -171,12 +131,7 @@ export default function DrawingCreator({
     };
 
     React.useEffect(() => {
-        // Document-level mousemove and mouseup event listeners allow the creator component to respond even if
-        // the cursor leaves the drawing area before the mouse button is released, which finishes the shape
         if (drawingStatus !== DrawingStatus.init) {
-            document.addEventListener('mousemove', handleMouseMove);
-            document.addEventListener('mouseup', handleMouseUp);
-
             renderStep(renderPath);
         }
 
@@ -187,9 +142,6 @@ export default function DrawingCreator({
             if (renderHandle) {
                 window.cancelAnimationFrame(renderHandle);
             }
-
-            document.removeEventListener('mousemove', handleMouseMove);
-            document.removeEventListener('mouseup', handleMouseUp);
         };
     }, [drawingStatus]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -203,23 +155,20 @@ export default function DrawingCreator({
 
     return (
         // eslint-disable-next-line jsx-a11y/mouse-events-have-key-events
-        <div
+        <PointerCapture
             ref={creatorElRef}
             className={classNames(className, 'ba-DrawingCreator')}
             data-testid="ba-DrawingCreator"
-            onClick={handleClick}
-            onMouseDown={handleMouseDown}
-            onTouchCancel={handleTouchCancel}
-            onTouchEnd={handleTouchEnd}
-            onTouchMove={handleTouchMove}
-            onTouchStart={handleTouchStart}
-            role="presentation"
+            onDrawStart={startDraw}
+            onDrawStop={stopDraw}
+            onDrawUpdate={updateDraw}
+            status={drawingStatus}
         >
             <DrawingSVG ref={drawingSVGRef} className="ba-DrawingCreator-current">
                 <g fill="transparent" stroke={stroke.color} strokeWidth={strokeWidth}>
                     {drawingStatus === DrawingStatus.drawing && <DrawingPath ref={drawingPathRef} />}
                 </g>
             </DrawingSVG>
-        </div>
+        </PointerCapture>
     );
 }
