@@ -9,7 +9,9 @@ export default class HighlightManager extends BaseManager {
         this.reactEl.dataset.testid = 'ba-Layer--highlight';
     }
 
-    render(props: Props): void {
-        ReactDOM.render(<HighlightContainer location={this.location} {...props} />, this.reactEl);
+    render(props: Props): Promise<void> {
+        return new Promise<void>(resolve => {
+            ReactDOM.render(<HighlightContainer location={this.location} {...props} />, this.reactEl, resolve);
+        });
     }
 }

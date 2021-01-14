@@ -19,7 +19,7 @@ export type Props = {
 export interface Manager {
     destroy(): void;
     exists(parentEl: HTMLElement): boolean;
-    render(props: Props): void;
+    render(props: Props): Promise<void>;
     style(styles: Partial<CSSStyleDeclaration>): CSSStyleDeclaration;
 }
 
@@ -69,7 +69,7 @@ export default class BaseManager implements Manager {
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    render(props: Props): void {
+    render(props: Props): Promise<void> {
         throw new Error('Method not implemented.');
     }
 

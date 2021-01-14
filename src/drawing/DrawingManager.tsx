@@ -9,7 +9,9 @@ export default class DrawingListManager extends BaseManager {
         this.reactEl.dataset.testid = 'ba-Layer--drawing';
     }
 
-    render(props: Props): void {
-        ReactDOM.render(<DrawingAnnotationsContainer location={this.location} {...props} />, this.reactEl);
+    render(props: Props): Promise<void> {
+        return new Promise<void>(resolve => {
+            ReactDOM.render(<DrawingAnnotationsContainer location={this.location} {...props} />, this.reactEl, resolve);
+        });
     }
 }

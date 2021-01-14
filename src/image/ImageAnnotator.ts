@@ -4,7 +4,7 @@ import PopupManager from '../popup/PopupManager';
 import { centerDrawing, DrawingManager, isDrawing } from '../drawing';
 import { centerRegion, isRegion, RegionCreationManager, RegionManager } from '../region';
 import { CreatorStatus, getCreatorStatus } from '../store/creator';
-import { getAnnotation, getFileId, getIsCurrentFileVersion, getRotation } from '../store';
+import { getAnnotation, getFileId, getIsCurrentFileVersion, getRotation, setActiveAnnotationIdAction } from '../store';
 import { getRotatedPosition } from '../utils/rotate';
 import { Manager } from '../common/BaseManager';
 import { scrollToLocation } from '../utils/scroll';
@@ -69,6 +69,10 @@ export default class ImageAnnotator extends BaseAnnotator {
         return this.annotatedEl?.querySelector('img');
     }
 
+    handleMouseDown = (): void => {
+        this.store.dispatch(setActiveAnnotationIdAction(null));
+    };
+
     handleStore = (): void => {
         const referenceEl = this.getReference();
 
@@ -83,6 +87,11 @@ export default class ImageAnnotator extends BaseAnnotator {
         }
     };
 
+    postRender = (): void => {
+        document.removeEventListener('mousedown', this.handleMouseDown);
+        document.addEventListener('mousedown', this.handleMouseDown);
+    };
+
     render(): void {
         const referenceEl = this.getReference();
         const rotation = getRotation(this.store.getState()) || 0;
@@ -91,20 +100,22 @@ export default class ImageAnnotator extends BaseAnnotator {
             return;
         }
 
-        this.getManagers(this.annotatedEl, referenceEl).forEach(manager => {
-            manager.style({
-                height: `${referenceEl.offsetHeight}px`,
-                left: `${referenceEl.offsetLeft}px`,
-                top: `${referenceEl.offsetTop}px`,
-                transform: `rotate(${rotation}deg)`,
-                width: `${referenceEl.offsetWidth}px`,
-            });
+        Promise.all(
+            Array.from(this.getManagers(this.annotatedEl, referenceEl)).map(manager => {
+                manager.style({
+                    height: `${referenceEl.offsetHeight}px`,
+                    left: `${referenceEl.offsetLeft}px`,
+                    top: `${referenceEl.offsetTop}px`,
+                    transform: `rotate(${rotation}deg)`,
+                    width: `${referenceEl.offsetWidth}px`,
+                });
 
-            manager.render({
-                intl: this.intl,
-                store: this.store,
-            });
-        });
+                return manager.render({
+                    intl: this.intl,
+                    store: this.store,
+                });
+            }),
+        ).then(this.postRender);
     }
 
     scrollToAnnotation(annotationId: string | null): void {

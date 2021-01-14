@@ -9,7 +9,9 @@ export default class PopupManager extends BaseManager {
         this.reactEl.dataset.testid = 'ba-Layer--popup';
     }
 
-    render(props: Props): void {
-        ReactDOM.render(<PopupContainer location={this.location} {...props} />, this.reactEl);
+    render(props: Props): Promise<void> {
+        return new Promise<void>(resolve => {
+            ReactDOM.render(<PopupContainer location={this.location} {...props} />, this.reactEl, resolve);
+        });
     }
 }

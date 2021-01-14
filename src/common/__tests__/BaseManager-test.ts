@@ -5,7 +5,9 @@ class TestBaseManager extends BaseManager {
     decorate(): void {}
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    render(props: Props): void {} // eslint-disable-line @typescript-eslint/no-empty-function
+    render(props: Props): Promise<void> {
+        return Promise.resolve();
+    } // eslint-disable-line @typescript-eslint/no-empty-function
 }
 
 describe('BaseManager', () => {

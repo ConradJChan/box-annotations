@@ -10,7 +10,7 @@ import {
 } from '../highlight';
 import { centerRegion, isRegion, RegionCreationManager, RegionManager } from '../region';
 import { Event } from '../@types';
-import { getAnnotation } from '../store/annotations';
+import { getAnnotation, setActiveAnnotationIdAction } from '../store/annotations';
 import { getSelection } from './docUtil';
 import { Manager } from '../common/BaseManager';
 import { getFileId, getIsCurrentFileVersion, Mode } from '../store';
@@ -138,18 +138,29 @@ export default class DocumentAnnotator extends BaseAnnotator {
         }
     };
 
+    handleMouseDown = (): void => {
+        this.store.dispatch(setActiveAnnotationIdAction(null));
+    };
+
+    postRender = (): void => {
+        document.removeEventListener('mousedown', this.handleMouseDown);
+        document.addEventListener('mousedown', this.handleMouseDown);
+    };
+
     render(): void {
-        this.getPages()
-            .filter(({ dataset }) => dataset.loaded && dataset.pageNumber)
-            .forEach(pageEl => this.renderPage(pageEl));
+        Promise.all(
+            this.getPages()
+                .filter(({ dataset }) => dataset.loaded && dataset.pageNumber)
+                .map(pageEl => this.renderPage(pageEl)),
+        ).then(this.postRender);
     }
 
-    renderPage(pageEl: HTMLElement): void {
+    renderPage(pageEl: HTMLElement): Promise<void[]> {
         const pageManagers = this.getPageManagers(pageEl);
         const pageNumber = this.getPageNumber(pageEl);
 
         // Render annotations for every page
-        pageManagers.forEach(manager =>
+        const promises = Array.from(pageManagers).map(manager =>
             manager.render({
                 intl: this.intl,
                 store: this.store,
@@ -157,6 +168,8 @@ export default class DocumentAnnotator extends BaseAnnotator {
         );
 
         this.managers.set(pageNumber, pageManagers);
+
+        return Promise.all(promises);
     }
 
     scrollToAnnotation(annotationId: string | null): void {

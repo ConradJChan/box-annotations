@@ -36,12 +36,14 @@ export default class HighlightCreatorManager implements Manager {
         return parentEl.contains(this.referenceEl);
     }
 
-    render(): void {
+    render(): Promise<void> {
         // Clear previous selection
         this.store.dispatch(setSelectionAction(null));
 
         this.referenceEl.addEventListener('mousedown', this.handleMouseDown);
         this.referenceEl.addEventListener('mouseup', this.handleMouseUp);
+
+        return Promise.resolve();
     }
 
     style(styles: Partial<CSSStyleDeclaration>): CSSStyleDeclaration {

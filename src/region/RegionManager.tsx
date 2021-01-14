@@ -9,7 +9,9 @@ export default class RegionListManager extends BaseManager {
         this.reactEl.dataset.testid = 'ba-Layer--region';
     }
 
-    render(props: Props): void {
-        ReactDOM.render(<RegionAnnotationsContainer location={this.location} {...props} />, this.reactEl);
+    render(props: Props): Promise<void> {
+        return new Promise<void>(resolve => {
+            ReactDOM.render(<RegionAnnotationsContainer location={this.location} {...props} />, this.reactEl, resolve);
+        });
     }
 }

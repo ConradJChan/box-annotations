@@ -9,7 +9,9 @@ export default class RegionManager extends BaseManager {
         this.reactEl.dataset.testid = 'ba-Layer--regionCreation';
     }
 
-    render(props: Props): void {
-        ReactDOM.render(<RegionCreationContainer location={this.location} {...props} />, this.reactEl);
+    render(props: Props): Promise<void> {
+        return new Promise<void>(resolve => {
+            ReactDOM.render(<RegionCreationContainer location={this.location} {...props} />, this.reactEl, resolve);
+        });
     }
 }
